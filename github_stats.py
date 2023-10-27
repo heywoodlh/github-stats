@@ -128,6 +128,7 @@ class Queries(object):
     login,
     name,
     repositories(
+        privacy: PUBLIC,
         first: 100,
         orderBy: {{
             field: UPDATED_AT,
