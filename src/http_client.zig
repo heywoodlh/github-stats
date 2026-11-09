@@ -74,6 +74,17 @@ pub fn fetch(self: *Self, request: Request, retries: isize) !Response {
             writer_initialized = false;
             return self.fetch(request, retries - 1);
         },
+        error.HttpChunkTruncated => {
+            // GitHub's API sometimes cuts off chunked responses partway
+            // through. Retry the request, discarding the partial body.
+            std.log.debug(
+                "Response truncated. Retrying ({d} retries left).",
+                .{retries},
+            );
+            writer.deinit();
+            writer_initialized = false;
+            return self.fetch(request, retries - 1);
+        },
         else => return err,
     }).status;
     return .{

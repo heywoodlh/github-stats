@@ -600,7 +600,16 @@ fn getLinesChanged(
             // If we're hitting rate limits on this API, just clone the repo
             // locally to compute lines changed
             // https://docs.github.com/en/rest/using-the-rest-api/troubleshooting-the-rest-api?apiVersion=2026-03-10#rate-limit-errors
-            .accepted, .forbidden, .too_many_requests => {
+            // Transient server errors (e.g. gateway timeouts) are treated the
+            // same way, since this endpoint is flaky
+            .accepted,
+            .forbidden,
+            .too_many_requests,
+            .internal_server_error,
+            .bad_gateway,
+            .service_unavailable,
+            .gateway_timeout,
+            => {
                 item.timestamp =
                     std.Io.Clock.real.now(io).toSeconds() + item.delay;
                 // Note: this actually works way better with a very short delay,
